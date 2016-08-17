@@ -32,8 +32,18 @@ var CocaCola = (function () {
     }
     return CocaCola;
 }());
+/// <reference path="product.ts" />
+var productFactory = (function () {
+    function productFactory() {
+    }
+    productFactory.GetProduct = function () {
+        return new CocaCola();
+    };
+    return productFactory;
+}());
 /// <reference path="./coin.ts" />
 /// <reference path="./product.ts" />
+/// <reference path="./productFactory.ts" />
 var VendingMachineSize;
 (function (VendingMachineSize) {
     VendingMachineSize[VendingMachineSize["small"] = 6] = "small";
@@ -52,24 +62,46 @@ var VendingMachine = (function () {
     function VendingMachine() {
         var _this = this;
         this.paid = ko.observable(0);
+        this.selectedCell = ko.observable(new Cell(new CocaCola()));
+        this.cells = ko.observableArray([]);
+        this.canPay = ko.pureComputed(function () { return _this.paid() - _this.selectedCell().product.price >= 0; });
         this.acceptedCoins = [new Quarter()];
+        this.select = function (cell) {
+            cell.sold(false);
+            _this.selectedCell(cell);
+            console.log('selected');
+        };
         this.acceptCoin = function (coin) {
             var oldTotal = _this.paid();
             _this.paid(oldTotal + coin.Value);
         };
+        this.pay = function () {
+            if (_this.selectedCell().stock() < 1) {
+                alert("I'm sorry, we're out of them!");
+                return;
+            }
+            var currentPayed = _this.paid();
+            _this.paid(Math.round(((currentPayed - _this.selectedCell().product.price) * 100)) / 100);
+            var currentStock = _this.selectedCell().stock();
+            _this.selectedCell().stock(currentStock - 1);
+            _this.selectedCell().sold(true);
+        };
     }
+    Object.defineProperty(VendingMachine.prototype, "size", {
+        set: function (givenSize) {
+            this.cells([]);
+            for (var index = 0; index < givenSize; index++) {
+                var product = productFactory.GetProduct();
+                this.cells.push(new Cell(product));
+            }
+        },
+        enumerable: true,
+        configurable: true
+    });
     return VendingMachine;
 }());
 /// <reference path="VendingMachine.ts" />
 var machine = new VendingMachine();
+machine.size = VendingMachineSize.medium;
 ko.applyBindings(machine);
-/// <reference path="product.ts" />
-var productFactory = (function () {
-    function productFactory() {
-    }
-    productFactory.GetProduct = function () {
-        return new CocaCola();
-    };
-    return productFactory;
-}());
 //# sourceMappingURL=app.js.map

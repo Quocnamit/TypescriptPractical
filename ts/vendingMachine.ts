@@ -10,7 +10,7 @@ enum VendingMachineSize {
 }
 
 class Cell {
-    constructor(public product: CocaCola) {
+    constructor(public product: Product) {
         
     }
     
@@ -20,10 +20,10 @@ class Cell {
 
 class VendingMachine {
     paid = ko.observable(0)
-    selectedCell = ko.observable(new Cell(new CocaCola()))
+    selectedCell = ko.observable(new Cell(new Initial()))
     cells = ko.observableArray([])
     canPay = ko.pureComputed(() => this.paid() - this.selectedCell().product.price >= 0)
-    acceptedCoins: Quarter[] = [new Quarter()]
+    acceptedCoins: Coin[] = [new Dime(), new Quarter(), new Half(), new Dollar()]
     
     
     set size(givenSize: VendingMachineSize){
